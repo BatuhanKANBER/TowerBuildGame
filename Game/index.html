@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<title>Kule Yapma Oyunu</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    color: #fff;
+    overflow: hidden;
+  }
+  h1 { margin-bottom: 10px; font-size: 26px; letter-spacing: 1px; }
+  #info {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    background: rgba(0,0,0,0.25);
+    padding: 10px 20px;
+    border-radius: 10px;
+  }
+  #info span b { color: #ffd95e; }
+  #combo.active { color: #ff6b6b; font-weight: bold; animation: pulse 0.5s infinite alternate; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.15); } }
+  canvas {
+    background: linear-gradient(180deg, #87ceeb 0%, #b0e0e6 100%);
+    border: 4px solid #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  #hint { margin-top: 10px; font-size: 14px; opacity: 0.85; }
+  #message {
+    position: absolute;
+    top: 50%;
+    font-size: 36px;
+    font-weight: bold;
+    color: #ffd95e;
+    text-shadow: 2px 2px 6px #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.5s;
+  }
+  #message.show { opacity: 1; transform: translateY(-30px); }
+</style>
+</head>
+<body>
+  <h1>🏗️ Kule Yapma Oyunu</h1>
+  <div id="info">
+    <span>Skor: <b id="score">0</b></span>
+    <span>Kat: <b id="floors">0</b></span>
+    <span id="combo">Kombo: <b id="comboCount">0</b>/5</span>
+  </div>
+  <canvas id="game" width="400" height="600"></canvas>
+  <div id="hint">⬇️ Aşağı oka basarak katı bırak</div>
+  <div id="message"></div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const scoreEl = document.getElementById('score');
+const floorsEl = document.getElementById('floors');
+const comboEl = document.getElementById('combo');
+const comboCountEl = document.getElementById('comboCount');
+const messageEl = document.getElementById('message');
+
+const BLOCK_SIZE = 60;
+const PERFECT_TOLERANCE = 4; // px
+const SWING_AMPLITUDE = W / 2 - BLOCK_SIZE / 2 - 10;
+const SWING_CENTER = W / 2;
+const TOP_SCREEN_Y = 400; // tepedeki bloğun sabit duracağı ekran y konumu
+
+let state;
+
+function reset() {
+  state = {
+    score: 0,
+    floors: 0,
+    perfectStreak: 0,
+    inCombo: false,
+    tower: [], // {x, y, color}
+    current: null,
+    falling: null,
+    cameraY: 0,
+    targetCameraY: 0,
+    swingTime: 0,
+    swayTime: 0,
+    swayAmount: 0,      // hedef sallanma miktarı (0..1)
+    swayCurrent: 0,     // yumuşatılmış şu anki sallanma
+    gameOver: false,
+  };
+  // base floor
+  state.tower.push({
+    x: SWING_CENTER - BLOCK_SIZE / 2,
+    y: H - 40 - BLOCK_SIZE,
+    color: '#5a3a22',
+  });
+  state.floors = 1;
+  spawnNewBlock();
+  updateUI();
+}
+
+function spawnNewBlock() {
+  state.swingTime = 0;
+  const top = state.tower[state.tower.length - 1];
+  state.current = {
+    x: SWING_CENTER - BLOCK_SIZE / 2,
+    y: top.y - state.cameraY - 250, // visual y on screen above tower
+    color: randomColor(),
+  };
+}
+
+// Her 28 skor sonrası daha sıcak renk paletine geçer
+const COLOR_TIERS = [
+  ['#4dabf7', '#74c0fc', '#a5d8ff', '#b197fc', '#9775fa'], // 0-27: soğuk maviler/morlar
+  ['#69db7c', '#8ce99a', '#b2f2bb', '#94d82d', '#a9e34b'], // 28-55: yeşiller
+  ['#ffd43b', '#ffe066', '#ffec99', '#fcc419', '#fab005'], // 56-83: sarılar
+  ['#ffa94d', '#ffc078', '#ffd8a8', '#ff922b', '#fd7e14'], // 84-111: turuncular
+  ['#ff6b6b', '#ff8787', '#ffa8a8', '#fa5252', '#f03e3e'], // 112-139: kırmızılar
+  ['#e03131', '#c92a2a', '#ff4d4d', '#d6336c', '#e64980'], // 140+: koyu kırmızı/pembe
+];
+const TIER_STEP = 28;
+
+function randomColor() {
+  const tierIndex = Math.min(
+    COLOR_TIERS.length - 1,
+    Math.floor(state.score / TIER_STEP)
+  );
+  const palette = COLOR_TIERS[tierIndex];
+  return palette[Math.floor(Math.random() * palette.length)];
+}
+
+function dropBlock() {
+  if (state.falling || state.gameOver || !state.current) return;
+  // compute swing x at this moment
+  const x = SWING_CENTER + Math.sin(state.swingTime) * SWING_AMPLITUDE - BLOCK_SIZE / 2;
+  const top = state.tower[state.tower.length - 1];
+  state.falling = {
+    x: x,
+    y: top.y - BLOCK_SIZE * (state.tower.length === 0 ? 0 : 1) - (state.tower.length * 0), // start at current visual top
+    targetY: top.y - BLOCK_SIZE,
+    vy: 0,
+    color: state.current.color,
+  };
+  // Start falling from the current visual position translated to world coords
+  state.falling.y = top.y - BLOCK_SIZE - 250; // begin above
+  state.current = null;
+}
+
+function update(dt) {
+  if (state.gameOver) return;
+
+  // swing - kat say\u0131s\u0131 artt\u0131k\u00e7a h\u0131zlan\u0131r, \u00fcst s\u0131n\u0131r var
+  if (state.current) {
+    const minSpeed = 1.2;
+    const maxSpeed = 4.5;
+    const speed = Math.min(maxSpeed, minSpeed + state.floors * 0.06);
+    state.swingTime += dt * speed;
+  }
+
+  // bina sallanma fiziği
+  state.swayTime += dt * 2.0;
+  state.swayCurrent += (state.swayAmount - state.swayCurrent) * Math.min(1, dt * 2.5);
+  state.swayAmount = Math.max(0, state.swayAmount - dt * 0.05);
+
+  // falling physics
+  if (state.falling) {
+    state.falling.vy += 1500 * dt;
+    state.falling.y += state.falling.vy * dt;
+    if (state.falling.y >= state.falling.targetY) {
+      state.falling.y = state.falling.targetY;
+      landBlock();
+    }
+  }
+
+  // camera smoothing
+  state.cameraY += (state.targetCameraY - state.cameraY) * Math.min(1, dt * 5);
+}
+
+function landBlock() {
+  const top = state.tower[state.tower.length - 1];
+  const fx = state.falling.x;
+  const dx = fx - top.x;
+  const overlap = BLOCK_SIZE - Math.abs(dx);
+
+  if (overlap <= 0) {
+    // missed completely
+    gameOver();
+    return;
+  }
+
+  let gainedScore = 0;
+  let perfect = false;
+
+  if (Math.abs(dx) <= PERFECT_TOLERANCE) {
+    // perfect placement - snap to exact position
+    perfect = true;
+    state.perfectStreak++;
+    // kusursuz: sallanmayı azalt
+    state.swayAmount = Math.max(0, state.swayAmount * 0.5 - 0.1);
+    if (state.inCombo) {
+      gainedScore = 3;
+    } else if (state.perfectStreak >= 5) {
+      state.inCombo = true;
+      gainedScore = 3;
+      showMessage('🔥 KOMBO BAŞLADI!');
+    } else {
+      gainedScore = 2;
+      showMessage('✨ Kusursuz! +2');
+    }
+    state.tower.push({
+      x: top.x,
+      y: top.y - BLOCK_SIZE,
+      color: state.falling.color,
+    });
+  } else {
+    // imperfect - combo breaks
+    if (state.inCombo) {
+      showMessage('💥 Kombo Bitti!');
+    }
+    state.perfectStreak = 0;
+    state.inCombo = false;
+    gainedScore = 1;
+    // kusurlu: sallanmayı artır (sapma miktarına göre)
+    const missRatio = Math.abs(dx) / BLOCK_SIZE; // 0..1
+    state.swayAmount = Math.min(1, state.swayAmount + 0.25 + missRatio * 0.4);
+    // kare boyutu değişmez, düştüğü yere yerleşir
+    state.tower.push({
+      x: fx,
+      y: top.y - BLOCK_SIZE,
+      color: state.falling.color,
+    });
+  }
+
+  state.score += gainedScore;
+  state.floors++;
+  state.falling = null;
+
+  // tepedeki blok ekran y = TOP_SCREEN_Y'de sabit kalsın
+  const newTop = state.tower[state.tower.length - 1];
+  state.targetCameraY = Math.min(0, newTop.y - TOP_SCREEN_Y);
+
+  if (perfect && state.inCombo && gainedScore === 3) {
+    // already shown
+  }
+
+  updateUI();
+  spawnNewBlock();
+}
+
+function gameOver() {
+  state.gameOver = true;
+  showMessage('💀 OYUN BİTTİ! Tekrar için boşluk', 3000);
+}
+
+let messageTimeout;
+function showMessage(text, duration = 1200) {
+  messageEl.textContent = text;
+  messageEl.classList.add('show');
+  clearTimeout(messageTimeout);
+  messageTimeout = setTimeout(() => messageEl.classList.remove('show'), duration);
+}
+
+function updateUI() {
+  scoreEl.textContent = state.score;
+  floorsEl.textContent = state.floors;
+  comboCountEl.textContent = Math.min(state.perfectStreak, 5);
+  if (state.inCombo) {
+    comboEl.classList.add('active');
+    comboEl.firstChild.textContent = 'KOMBO AKTİF! ';
+  } else {
+    comboEl.classList.remove('active');
+    comboEl.firstChild.textContent = 'Kombo: ';
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // ground
+  ctx.fillStyle = '#3a5f3a';
+  ctx.fillRect(0, H - 40 - state.cameraY, W, 40);
+  ctx.fillStyle = '#2d4a2d';
+  ctx.fillRect(0, H - 40 - state.cameraY, W, 6);
+
+  // tower
+  const total = state.tower.length;
+  const maxSwayPx = 14;
+  for (let i = 0; i < total; i++) {
+    const b = state.tower[i];
+    // alttan yukarıya doğru artan sallanma faktoru (taban sabit)
+    const heightFactor = total <= 1 ? 0 : i / (total - 1);
+    const offsetX = Math.sin(state.swayTime + i * 0.15) * state.swayCurrent * maxSwayPx * heightFactor;
+    const w = b.width || BLOCK_SIZE;
+    drawBlock(b.x + offsetX, b.y - state.cameraY, w, BLOCK_SIZE, b.color);
+  }
+
+  // falling
+  if (state.falling) {
+    drawBlock(state.falling.x, state.falling.y - state.cameraY, BLOCK_SIZE, BLOCK_SIZE, state.falling.color);
+  }
+
+  // current swinging
+  if (state.current) {
+    const x = SWING_CENTER + Math.sin(state.swingTime) * SWING_AMPLITUDE - BLOCK_SIZE / 2;
+    const top = state.tower[state.tower.length - 1];
+    const y = top.y - BLOCK_SIZE - 250 - state.cameraY;
+    // rope
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(SWING_CENTER, 0);
+    ctx.lineTo(x + BLOCK_SIZE / 2, y);
+    ctx.stroke();
+    drawBlock(x, y, BLOCK_SIZE, BLOCK_SIZE, state.current.color);
+  }
+}
+
+function drawBlock(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  // highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.fillRect(x + 4, y + 4, w - 8, 6);
+}
+
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    dropBlock();
+  } else if (e.key === ' ' && state.gameOver) {
+    reset();
+  }
+});
+
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
