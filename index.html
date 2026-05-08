@@ -48,6 +48,181 @@
     transition: opacity 0.3s, transform 0.5s;
   }
   #message.show { opacity: 1; transform: translateY(-30px); }
+
+  /* Menu overlay */
+  #menu {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 50, 0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #menu.hidden { display: none; }
+  .menu-card {
+    background: linear-gradient(180deg, #2a5298 0%, #1e3c72 100%);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 16px;
+    padding: 28px 32px;
+    width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+  .menu-card h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+    color: #ffd95e;
+  }
+  .menu-card label {
+    display: block;
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 6px;
+    opacity: 0.9;
+  }
+  .menu-card input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 14px;
+    outline: none;
+  }
+  .menu-card input:focus { border-color: #ffd95e; }
+  .menu-card button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #ffd95e;
+    color: #1e3c72;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .menu-card button:hover { background: #ffe98a; transform: translateY(-1px); }
+  .menu-card button:active { transform: translateY(0); }
+  .name-error {
+    color: #ff8787;
+    font-size: 13px;
+    min-height: 18px;
+    margin: -6px 0 8px;
+    text-align: left;
+  }
+  .scores {
+    margin-top: 18px;
+    text-align: left;
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px;
+    padding: 12px 14px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .scores h3 {
+    font-size: 15px;
+    margin-bottom: 8px;
+    color: #ffd95e;
+    text-align: center;
+  }
+  .scores ol {
+    list-style: none;
+    counter-reset: rank;
+    font-size: 14px;
+  }
+  .scores li {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+    counter-increment: rank;
+  }
+  .scores li:last-child { border-bottom: none; }
+  .scores li::before {
+    content: counter(rank) ".";
+    margin-right: 8px;
+    color: #ffd95e;
+    min-width: 24px;
+  }
+  .scores .name { flex: 1; }
+  .scores .pts { font-weight: bold; color: #ffd95e; }
+  .scores .empty { opacity: 0.6; text-align: center; font-style: italic; padding: 6px 0; }
+  #playerLabel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 14px;
+    background: rgba(0,0,0,0.3);
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+  #playerLabel b { color: #ffd95e; }
+
+  /* Game over overlay */
+  #gameOverOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 20, 50, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9;
+  }
+  #gameOverOverlay.hidden { display: none; }
+  .gameover-card {
+    background: linear-gradient(180deg, #c92a2a 0%, #1e3c72 100%);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 16px;
+    padding: 28px 32px;
+    width: 340px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: gameOverIn 0.4s ease-out;
+  }
+  @keyframes gameOverIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .gameover-card h2 {
+    font-size: 26px;
+    margin-bottom: 6px;
+    color: #ffd95e;
+  }
+  .gameover-card .sub { font-size: 14px; opacity: 0.9; margin-bottom: 14px; }
+  .gameover-stats {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-around;
+    font-size: 15px;
+  }
+  .gameover-stats b { color: #ffd95e; font-size: 20px; display: block; }
+  .gameover-buttons { display: flex; flex-direction: column; gap: 8px; }
+  .gameover-buttons button {
+    padding: 11px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .gameover-buttons button:hover { transform: translateY(-1px); }
+  .gameover-buttons button:active { transform: translateY(0); }
+  .btn-retry { background: #ffd95e; color: #1e3c72; }
+  .btn-retry:hover { background: #ffe98a; }
+  .btn-menu { background: rgba(255,255,255,0.2); color: #fff; }
+  .btn-menu:hover { background: rgba(255,255,255,0.3); }
+  .btn-quit { background: rgba(0,0,0,0.35); color: #fff; }
+  .btn-quit:hover { background: rgba(0,0,0,0.5); }
 </style>
 </head>
 <body>
@@ -55,11 +230,42 @@
   <div id="info">
     <span>Skor: <b id="score">0</b></span>
     <span>Kat: <b id="floors">0</b></span>
-    <span id="combo">Kombo: <b id="comboCount">0</b>/5</span>
+    <span id="combo">Kombo: <b id="comboCount">0</b>/3</span>
   </div>
   <canvas id="game" width="400" height="600"></canvas>
   <div id="hint">⬇️ Aşağı oka basarak katı bırak</div>
   <div id="message"></div>
+  <div id="playerLabel">Oyuncu: <b id="playerName">-</b></div>
+
+  <div id="menu">
+    <div class="menu-card">
+      <h2>🏗️ Kule Yapma Oyunu</h2>
+      <label for="nameInput">Kullanıcı Adı</label>
+      <input id="nameInput" type="text" maxlength="16" placeholder="Adınızı yazın" autocomplete="off" />
+      <button id="startBtn">Oyuna Başla</button>
+      <div id="nameError" class="name-error"></div>
+      <div class="scores">
+        <h3>🏆 En İyi Skorlar</h3>
+        <ol id="scoreList"></ol>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverOverlay" class="hidden">
+    <div class="gameover-card">
+      <h2>💀 Oyun Bitti</h2>
+      <div class="sub">Tebrikler <b id="goPlayerName">-</b>!</div>
+      <div class="gameover-stats">
+        <div>Skor<b id="goScore">0</b></div>
+        <div>Kat<b id="goFloors">0</b></div>
+      </div>
+      <div class="gameover-buttons">
+        <button class="btn-retry" id="retryBtn">🔄 Tekrar Oyna</button>
+        <button class="btn-menu" id="menuBtn">🏠 Ana Menü</button>
+        <button class="btn-quit" id="quitBtn">❌ Çıkış</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 const canvas = document.getElementById('game');
@@ -71,6 +277,118 @@ const floorsEl = document.getElementById('floors');
 const comboEl = document.getElementById('combo');
 const comboCountEl = document.getElementById('comboCount');
 const messageEl = document.getElementById('message');
+const menuEl = document.getElementById('menu');
+const nameInputEl = document.getElementById('nameInput');
+const startBtnEl = document.getElementById('startBtn');
+const scoreListEl = document.getElementById('scoreList');
+const playerNameEl = document.getElementById('playerName');
+const nameErrorEl = document.getElementById('nameError');
+const gameOverOverlayEl = document.getElementById('gameOverOverlay');
+const goPlayerNameEl = document.getElementById('goPlayerName');
+const goScoreEl = document.getElementById('goScore');
+const goFloorsEl = document.getElementById('goFloors');
+const retryBtnEl = document.getElementById('retryBtn');
+const menuBtnEl = document.getElementById('menuBtn');
+const quitBtnEl = document.getElementById('quitBtn');
+
+const SCORES_KEY = 'towerGame.scores';
+const LAST_NAME_KEY = 'towerGame.lastName';
+let currentPlayer = '';
+let scoreSaved = false;
+
+function loadScores() {
+  try {
+    return JSON.parse(localStorage.getItem(SCORES_KEY)) || [];
+  } catch { return []; }
+}
+function saveScores(list) {
+  localStorage.setItem(SCORES_KEY, JSON.stringify(list));
+}
+function addScore(name, score) {
+  const list = loadScores();
+  list.push({ name, score, date: Date.now() });
+  list.sort((a, b) => b.score - a.score);
+  saveScores(list.slice(0, 20));
+}
+function renderScores() {
+  const list = loadScores().slice(0, 10);
+  if (list.length === 0) {
+    scoreListEl.innerHTML = '<li class="empty">Henüz skor yok</li>';
+    return;
+  }
+  scoreListEl.innerHTML = list.map(s =>
+    `<li><span class="name">${escapeHtml(s.name)}</span><span class="pts">${s.score}</span></li>`
+  ).join('');
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function showMenu() {
+  renderScores();
+  const last = localStorage.getItem(LAST_NAME_KEY) || '';
+  nameInputEl.value = last;
+  nameErrorEl.textContent = '';
+  menuEl.classList.remove('hidden');
+  setTimeout(() => nameInputEl.focus(), 50);
+}
+function hideMenu() {
+  menuEl.classList.add('hidden');
+}
+
+startBtnEl.addEventListener('click', startFromMenu);
+nameInputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); startFromMenu(); }
+});
+nameInputEl.addEventListener('input', () => {
+  if (nameErrorEl.textContent) nameErrorEl.textContent = '';
+});
+function startFromMenu() {
+  const name = (nameInputEl.value || '').trim().slice(0, 16);
+  if (!name) {
+    nameErrorEl.textContent = 'Lütfen bir kullanıcı adı girin.';
+    nameInputEl.focus();
+    return;
+  }
+  const exists = loadScores().some(s => s.name.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    nameErrorEl.textContent = 'Bu kullanıcı adı zaten kullanılıyor. Başka bir ad seçin.';
+    nameInputEl.focus();
+    nameInputEl.select();
+    return;
+  }
+  nameErrorEl.textContent = '';
+  currentPlayer = name;
+  localStorage.setItem(LAST_NAME_KEY, name);
+  playerNameEl.textContent = name;
+  hideMenu();
+  reset();
+}
+
+retryBtnEl.addEventListener('click', () => {
+  gameOverOverlayEl.classList.add('hidden');
+  reset();
+});
+menuBtnEl.addEventListener('click', () => {
+  gameOverOverlayEl.classList.add('hidden');
+  showMenu();
+});
+quitBtnEl.addEventListener('click', () => {
+  gameOverOverlayEl.classList.add('hidden');
+  state = null;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px Segoe UI, Tahoma';
+  ctx.textAlign = 'center';
+  ctx.fillText('Görüşürüz! 👋', W / 2, H / 2 - 10);
+  ctx.font = '14px Segoe UI, Tahoma';
+  ctx.fillText('Sekmeyi kapatabilirsiniz', W / 2, H / 2 + 18);
+  try { window.close(); } catch {}
+});
 
 const BLOCK_SIZE = 60;
 const PERFECT_TOLERANCE = 4; // px
@@ -81,6 +399,8 @@ const TOP_SCREEN_Y = 400; // tepedeki bloğun sabit duracağı ekran y konumu
 let state;
 
 function reset() {
+  scoreSaved = false;
+  gameOverOverlayEl.classList.add('hidden');
   state = {
     score: 0,
     floors: 0,
@@ -95,6 +415,8 @@ function reset() {
     swayTime: 0,
     swayAmount: 0,      // hedef sallanma miktarı (0..1)
     swayCurrent: 0,     // yumuşatılmış şu anki sallanma
+    shakeTime: 0,       // ekran sarsıntısı kalan süre (sn)
+    shakeIntensity: 0,  // ekran sarsıntısı şiddeti (px)
     gameOver: false,
   };
   // base floor
@@ -109,7 +431,7 @@ function reset() {
 }
 
 function spawnNewBlock() {
-  state.swingTime = 0;
+  // swingTime sıfırlanmaz: yeni blok, öncekinin bırakıldığı fazdan sallanmaya devam eder
   const top = state.tower[state.tower.length - 1];
   state.current = {
     x: SWING_CENTER - BLOCK_SIZE / 2,
@@ -156,6 +478,12 @@ function dropBlock() {
 }
 
 function update(dt) {
+  // ekran sarsıntısı oyun bittiğinde de devam etsin
+  if (state.shakeTime > 0) {
+    state.shakeTime -= dt;
+    if (state.shakeTime < 0) state.shakeTime = 0;
+  }
+
   if (state.gameOver) return;
 
   // swing - kat say\u0131s\u0131 artt\u0131k\u00e7a h\u0131zlan\u0131r, \u00fcst s\u0131n\u0131r var
@@ -208,7 +536,7 @@ function landBlock() {
     state.swayAmount = Math.max(0, state.swayAmount * 0.5 - 0.1);
     if (state.inCombo) {
       gainedScore = 3;
-    } else if (state.perfectStreak >= 5) {
+    } else if (state.perfectStreak >= 3) {
       state.inCombo = true;
       gainedScore = 3;
       showMessage('🔥 KOMBO BAŞLADI!');
@@ -258,7 +586,16 @@ function landBlock() {
 
 function gameOver() {
   state.gameOver = true;
-  showMessage('💀 OYUN BİTTİ! Tekrar için boşluk', 3000);
+  state.shakeTime = 0.8;
+  state.shakeIntensity = 14;
+  if (!scoreSaved && currentPlayer) {
+    addScore(currentPlayer, state.score);
+    scoreSaved = true;
+  }
+  goPlayerNameEl.textContent = currentPlayer || '-';
+  goScoreEl.textContent = state.score;
+  goFloorsEl.textContent = state.floors;
+  setTimeout(() => gameOverOverlayEl.classList.remove('hidden'), 900);
 }
 
 let messageTimeout;
@@ -272,7 +609,7 @@ function showMessage(text, duration = 1200) {
 function updateUI() {
   scoreEl.textContent = state.score;
   floorsEl.textContent = state.floors;
-  comboCountEl.textContent = Math.min(state.perfectStreak, 5);
+  comboCountEl.textContent = Math.min(state.perfectStreak, 3);
   if (state.inCombo) {
     comboEl.classList.add('active');
     comboEl.firstChild.textContent = 'KOMBO AKTİF! ';
@@ -284,6 +621,15 @@ function updateUI() {
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
+
+  ctx.save();
+  if (state.shakeTime > 0) {
+    const t = state.shakeTime; // azaldıkça şiddet düşsün
+    const mag = state.shakeIntensity * (t / 0.8);
+    const sx = (Math.random() * 2 - 1) * mag;
+    const sy = (Math.random() * 2 - 1) * mag;
+    ctx.translate(sx, sy);
+  }
 
   // ground
   ctx.fillStyle = '#3a5f3a';
@@ -322,6 +668,8 @@ function draw() {
     ctx.stroke();
     drawBlock(x, y, BLOCK_SIZE, BLOCK_SIZE, state.current.color);
   }
+
+  ctx.restore();
 }
 
 function drawBlock(x, y, w, h, color) {
@@ -339,21 +687,35 @@ let lastTime = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
-  update(dt);
-  draw();
+  if (state) {
+    update(dt);
+    draw();
+  }
   requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', (e) => {
+  if (!menuEl.classList.contains('hidden')) return;
+  if (!gameOverOverlayEl.classList.contains('hidden')) {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      retryBtnEl.click();
+    } else if (e.key === 'm' || e.key === 'M') {
+      menuBtnEl.click();
+    }
+    return;
+  }
   if (e.key === 'ArrowDown') {
     e.preventDefault();
     dropBlock();
-  } else if (e.key === ' ' && state.gameOver) {
+  } else if (e.key === ' ' && state && state.gameOver) {
     reset();
+  } else if ((e.key === 'm' || e.key === 'M') && state && state.gameOver) {
+    showMenu();
   }
 });
 
-reset();
+showMenu();
 requestAnimationFrame(loop);
 </script>
 </body>
